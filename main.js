@@ -6,12 +6,13 @@ var timeago = require('timeago');
 
 var urlStopwordSet = require('./urlStopwordSet');
 var placeClassifier = require('./placeClassifier');
+var chineseTokenizer = require('./chineseTokenizer');
 
 var modelFilename = process.argv[2];
 var testDataFilename = process.argv[3];
 var model = require(modelFilename);
 
-var gTokenizer = new placeClassifier.PlaceTokenizer(urlStopwordSet);
+var gTokenizer = new chineseTokenizer.ChineseTokenizer(model.logLikelihoods);
 var gClassifier = new placeClassifier.NaiveBayesClassifier(model);
 
 var gSuccessCount = 0;
@@ -47,7 +48,7 @@ new lazy(fs.createReadStream(testDataFilename))
     var data = line.toString().split('\t');
 
     var categorySet = {};
-    var givenCategories = data[2].split(/[,\s]/)
+    var givenCategories = data[3].split(/[,\s]/)
     for(var catIndex=0; catIndex < givenCategories.length; catIndex++) {
       categorySet[givenCategories[catIndex]] = true;
     }
@@ -56,7 +57,7 @@ new lazy(fs.createReadStream(testDataFilename))
       gDataMultiClassDoc += 1;
     }
 
-    var tokens = gTokenizer.tokenize(data[0], data[1]);
+    var tokens = gTokenizer.tokenize(data[0], data[1], data[2]);
     var categories = gClassifier.classify(tokens);
     var matchCount = 0;
 
@@ -72,6 +73,7 @@ new lazy(fs.createReadStream(testDataFilename))
         }
       }
     }
+
     // if at least one category is right, this will be 1
     var successRatio = matchCount/Object.keys(categorySet).length;
     gSuccessCount += successRatio;
