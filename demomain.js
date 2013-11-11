@@ -1,11 +1,19 @@
 var loadingCount = 0;
 
+function decreaseLoadingCount() {
+  loadingCount--;
+  if (loadingCount == 0) {
+    document.getElementById('classifier').disabled = false;
+    document.getElementById('classifier').value = 'Classify';
+  }
+}
+
 function loadModule(src, callback) {
   loadingCount++;
 
   var request = new XMLHttpRequest();
   request.onload = function() {
-    loadingCount--;
+    decreaseLoadingCount();
 
     var module = {
       exports: {}
